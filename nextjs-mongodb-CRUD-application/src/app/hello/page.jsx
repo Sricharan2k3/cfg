@@ -1,13 +1,37 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 const HelloPage = () => {
     const [responseData, setResponseData] = useState(null);
     const [count, setCount] = useState(0);
     const [posts, setPosts] = useState([]);
+    const [authorEId, setAuthorEId] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const { toast } = useToast();
+    const { data: session, status } = useSession();
+
+    useEffect(() => {
+        if (status === "authenticated") {
+            // User is already authenticated, redirect to homepage
+            setLoading(false);
+            setAuthorEId(session.user.email);
+        } else if (status === "loading") {
+            // Session is still loading, do nothing (optional)
+        } else {
+            redirect("/");
+            toast({
+                title: "Login Required",
+                description: "You have to be logged in to author a post",
+            });
+            // User is not authenticated, continue rendering the component
+        }
+    }, [session, status, redirect, setAuthorEId]);
+
 
     const handleClick = async () => {
         try {
